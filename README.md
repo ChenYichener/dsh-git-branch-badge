@@ -14,11 +14,11 @@ DSH Web UI 分支徽标插件：在**会话头部**显示当前工作区文件�
 > 前置条件：本机已安装 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（`dsh`）。
 
 ```bash
-# 方式一：直接从本仓库安装（无需 npm 账号）
-dsh plugin --profile <你的profile名> add github:ChenYichener/dsh-git-branch-badge
-
-# 方式二：发布到 npm 后（更简单）
+# 方式一：从 npm 安装（推荐，已发布为免费公开包）
 dsh plugin --profile <你的profile名> add dsh-git-branch-badge@0.1.0
+
+# 方式二：直接从本仓库安装（无需 npm 账号）
+dsh plugin --profile <你的profile名> add github:ChenYichener/dsh-git-branch-badge
 ```
 
 然后**重启 `dsh web`**，会话头部（天气小部件旁边）出现 `⎇ 分支名` 徽标即安装成功。
@@ -49,9 +49,9 @@ dsh plugin --profile <你的profile名> add dsh-git-branch-badge@0.1.0
 ### 使用者：升级到新版
 
 ```bash
-dsh plugin --profile <profile名> add github:ChenYichener/dsh-git-branch-badge
-# 或（npm 渠道）
 dsh plugin --profile <profile名> add dsh-git-branch-badge@<新版本号>
+# 或（GitHub 渠道）
+dsh plugin --profile <profile名> add github:ChenYichener/dsh-git-branch-badge
 ```
 
 然后重启 `dsh web`。
