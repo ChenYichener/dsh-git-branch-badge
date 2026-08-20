@@ -47,11 +47,6 @@
   "peerDependencies": {
     "react": "^18.2.0"
   },
-  "peerDependenciesMeta": {
-    "@deepseek-ai/cordis": {
-      "optional": true
-    }
-  },
   "devDependencies": {
     "tsdown": "^0.22.14"
   }
