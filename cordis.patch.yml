@@ -1,0 +1,15 @@
+# dsh-git-branch-badge bundle patch
+#
+# Installed through the official CLI:
+#
+#   dsh plugin --profile <name> add dsh-git-branch-badge@<version>
+#
+# The command reconciles `dsh.profile.bundles` against installed packages and,
+# seeing this declaration, appends the package to the bundle stack. The
+# profile boot then merges this patch (a single `insert` of the plugin row)
+# like any bundle layer. One row carries both halves: the Node half mounts the
+# /git-branch/api JSON route, the browser half (dsh.client manifest) registers
+# the session-header badge.
+- insert:
+    - id: git-branch-badge
+      name: 'dsh-git-branch-badge'

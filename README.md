@@ -7,6 +7,24 @@ DSH Web UI 分支徽标插件：在**会话头部**显示当前工作区文件�
 | `⎇ master` | 当前会话所属工作区文件夹的 git 分支 |
 | 黄色圆点 | 该文件夹有未提交的修改 |
 
+安装后**重启即生效、常驻不丢**（不再依赖动态插件，`dsh` 升级/重启后依然在）。
+
+## 安装（一行命令）
+
+> 前置条件：本机已安装 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（`dsh`）。
+
+```bash
+# 方式一：直接从本仓库安装（无需 npm 账号）
+dsh plugin --profile <你的profile名> add github:ChenYichener/dsh-git-branch-badge
+
+# 方式二：发布到 npm 后（更简单）
+dsh plugin --profile <你的profile名> add dsh-git-branch-badge@0.1.0
+```
+
+然后**重启 `dsh web`**，会话头部（天气小部件旁边）出现 `⎇ 分支名` 徽标即安装成功。
+
+> 默认 profile 一般是 `web`（即 `dsh web` 用的那个）；不确定可以运行 `dsh plugin --profile web list` 查看。
+
 ## 功能
 
 | 操作 | 用法 | 底层命令 |
@@ -18,90 +36,68 @@ DSH Web UI 分支徽标插件：在**会话头部**显示当前工作区文件�
 | 删除分支 | 行尾 🗑 → 二次确认 | `git branch -d <branch>`（安全删除） |
 | 刷新 | 面板底部"刷新"按钮 | 重新读取全部信息 |
 
-安全说明：删除只用 `-d`（未合并分支会被 git 拒绝并显示原因），当前分支不可删除；任何操作失败都会把 git 的原始报错显示在面板里。
-
-## 快速使用（约 1 分钟）
-
-> 前置条件：本机已安装 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（`dsh`），并且能用 `dsh web` 打开 Web 界面。
-
-**第 1 步：下载定义文件**
-
-```bash
-curl -L -o ~/git-branch-badge.dsh-plugin.json \
-  https://raw.githubusercontent.com/ChenYichener/dsh-git-branch-badge/main/git-branch-badge.dsh-plugin.json
-```
-
-**第 2 步：在 DSH 会话里安装**
-
-打开任意一个 DSH 会话，把下面这段话发给你的 agent：
-
-> 读取 ~/git-branch-badge.dsh-plugin.json 文件，用文件里的内容（plugin / name / purpose / code 字段）调用 cordis_define 定义这个插件，然后 cordis_run 运行它。
-
-**第 3 步：批准激活**
-
-界面会话流里出现 `cordis_run` 卡片时，点击 **允许 / Allow**。
-
-完成 —— 会话头部（天气小部件旁边）出现 `⎇ 分支名` 徽标，点击即可操作分支。
+安全说明：删除只用 `-d`（未合并分支会被 git 拒绝并显示原因），当前分支不可删除；任何操作失败都会把 git 的原始报错显示在面板里；所有 git 命令都不经过 shell，分支名有 `check-ref-format` 规则校验。
 
 ## 使用说明
 
-- 徽标绑定**当前会话所属的工作区文件夹**（按 `sessionId → workspace.sessionIds → workspace.path` 解析）；不属于任何工作区的散装会话不显示。
-- 点击徽标弹出分支面板：
-  - **顶部输入框**：输入新分支名创建并切换；
-  - **分支列表**：点击行切换；行尾 ✎ 重命名；行尾 🗑 删除（需确认）；
-  - **底部"刷新"**：重新读取分支信息。
+- 徽标绑定**当前会话所属的工作区文件夹**；不属于任何工作区的散装会话不显示。
+- 点击徽标弹出分支面板：顶部输入框新建；列表点击行切换、行尾 ✎ 重命名、行尾 🗑 删除（需确认）；底部"刷新"。
 - 非 Git 文件夹显示"非 Git"占位；游离 HEAD 有提示。
-- 分支名有基础校验（空白、`..`、`-` 开头等非法字符会被拦截），git 仍是最终裁决者。
 
 ## 更新
 
-### 使用者：升级到最新版
+### 使用者：升级到新版
 
-动态插件**不持久化**：重启 `dsh` 后失效。"更新"和"重装"是同一个动作——重新执行上面三步（重新下载 JSON → 重新定义运行 → 重新批准）即可拿到最新功能。
+```bash
+dsh plugin --profile <profile名> add github:ChenYichener/dsh-git-branch-badge
+# 或（npm 渠道）
+dsh plugin --profile <profile名> add dsh-git-branch-badge@<新版本号>
+```
+
+然后重启 `dsh web`。
 
 ### 维护者：发布新版本
 
-1. 修改 `src/host.js`（Host 半边，git 命令执行）或 `src/client.js`（Client 半边，徽标 UI）；
-2. 重新生成分发文件：`node scripts/build.js`（从 `src/*.js` 打包出 `git-branch-badge.dsh-plugin.json`）；
-3. 提交推送：
-
-```bash
-git add -A && git commit -m "describe the change" && git push
-```
-
-使用者重新 curl 下载 JSON 并重装即完成升级。
+1. 修改 `src/index.js`（Host 半边：git 命令与路由）或 `src/client/index.js`（Client 半边：徽标 UI）；
+2. 重新构建客户端包：`npm run build`（tsdown 生成 `lib/client.js`，已提交，用户从 git 安装无需构建）；
+3. 跑一遍冒烟测试（见 `scripts/smoke.mjs`，用临时仓库验证全部操作）；
+4. 提交推送（`git push`）；使用者重新执行上面的 add 命令 + 重启即升级。
 
 ## 卸载
 
-在 DSH 会话里让 agent 执行：
+```bash
+dsh plugin --profile <profile名> remove dsh-git-branch-badge
+```
 
-- `cordis_stop` —— 暂停插件（定义保留，可随时重新运行）；
-- `cordis_undefine` —— 彻底删除插件。
+然后重启 `dsh web`。
 
 ## 常见问题
 
-**Q：重启 dsh 后徽标不见了？**
-A：正常。动态插件只存在于当前进程，重启后重新执行"快速使用"三步即可。
+**Q：安装后徽标没出现？**
+A：确认重启了 `dsh web`；确认当前会话属于某个工作区（散装会话不显示）；查看是否报错（重启后的启动日志）。
 
-**Q：想一劳永逸、重启不丢？**
-A：把功能做成正式插件（`dsh plugin add` 可安装的 bundle，像 dsh-better-sidebar 那样），或合入 deepseek-harness 上游。目前这是维护者视角的后续路线，有需要可以联系仓库维护者。
-
-**Q：Windows 上能用吗？**
-A：能。依赖的 `subprocess` 服务和 `conversation.session.header.utilities` 槽位都是标准 profile 自带；git 命令均为跨平台子命令。
+**Q：和动态插件版（`dynamic/` 目录）什么关系？**
+A：`dynamic/` 是早期用动态 Cordis 插件机制做的版本（重启即失效，需要反复重装），已被本 bundle 取代。bundle 版用正式插件机制（Host webServer 路由 + Client slots），装一次常驻。
 
 ## 技术说明
 
-- 这是**动态 Cordis 插件**：Host 半边用 `harness.handle` 暴露私有 RPC（`git-info` / `git-checkout` / `git-create-branch` / `git-delete-branch` / `git-rename-branch`），通过 `subprocess` 服务直接执行 git（不经 shell、不受沙箱写权限限制）；Client 半边注册进 `conversation.session.header.utilities` 槽位，样式全部使用 DSH 主题 token。
+- **Host 半边**（`src/index.js`）：挂载 `/git-branch/api` JSON 路由（`ctx.webServer.register`），用 `node:child_process` 直接执行 git（不经 shell），带 DNS-rebinding / 跨站请求防护（仅接受 loopback Host + 同源浏览器标记）。
+- **Client 半边**（`src/client/index.js`）：注册进 `conversation.session.header.utilities` 槽位，通过 `fetch` 调宿主路由；样式为内联 `<style data-plugin>` 注入，全部使用 DSH 主题 token。
+- 构建：tsdown 生成 `lib/client.js`（`window.__ModuleLoader__.load` 模块表格式，react 走外部模块表），Node 半边即源文件，无需构建。
 - 仓库结构：
 
 ```
 dsh-git-branch-badge/
   README.md
   LICENSE
-  git-branch-badge.dsh-plugin.json   # 分发产物（安装用）
-  src/host.js                        # Host 半边源码（可编辑）
-  src/client.js                      # Client 半边源码（可编辑）
-  scripts/build.js                   # 由 src/*.js 重新生成分发 JSON
+  package.json            # dsh.bundle.patch + dsh.client 清单
+  cordis.patch.yml        # bundle 补丁：插入插件行
+  tsdown.config.ts        # client bundle 构建配置
+  src/index.js            # Host 半边（路由 + git）
+  src/client/index.js     # Client 半边（徽标 UI）
+  lib/client.js           # 构建产物（已提交）
+  scripts/smoke.mjs       # Host 半边集成冒烟测试
+  dynamic/                # 旧动态插件版（保留备查）
 ```
 
 ## License
