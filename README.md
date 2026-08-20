@@ -1,103 +1,108 @@
 # dsh-git-branch-badge
 
-DSH Web UI 分支徽标插件：在**会话头部**显示当前工作区文件夹的 git 分支，支持查看、切换、新建、重命名、删除分支。
+A DSH Web UI plugin that shows the git branch of the current workspace folder as a chip at the **left end of the composer tool row**, with view, switch, create, rename and delete operations.
 
-| 徽标 | 说明 |
+| Badge | Meaning |
 | --- | --- |
-| `⎇ master` | 当前会话所属工作区文件夹的 git 分支 |
-| 黄色圆点 | 该文件夹有未提交的修改 |
+| `⎇ main` | The git branch of the current session's workspace folder |
+| Yellow dot | The folder has uncommitted changes |
 
-安装后**重启即生效、常驻不丢**（不再依赖动态插件，`dsh` 升级/重启后依然在）。
+Installed as a regular plugin bundle: **it survives `dsh` restarts and upgrades** — no dynamic-plugin re-install needed.
 
-## 安装（一行命令）
+[中文文档](README.zh.md)
 
-> 前置条件：本机已安装 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（`dsh`）。
+## Install (one command)
+
+> Prerequisite: [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`) installed.
 
 ```bash
-# 方式一：从 npm 安装（推荐，已发布为免费公开包）
-dsh plugin --profile <你的profile名> add dsh-git-branch-badge@0.1.0
+# npm channel (recommended, published as a free public package)
+dsh plugin --profile <profile-name> add dsh-git-branch-badge@0.1.0
 
-# 方式二：直接从本仓库安装（无需 npm 账号）
-dsh plugin --profile <你的profile名> add github:ChenYichener/dsh-git-branch-badge
+# or install straight from this repository (no npm account needed)
+dsh plugin --profile <profile-name> add github:ChenYichener/dsh-git-branch-badge
 ```
 
-然后**重启 `dsh web`**，会话头部（天气小部件旁边）出现 `⎇ 分支名` 徽标即安装成功。
+Then **restart `dsh web`**. The `⎇ <branch>` chip appears at the left end of the composer tool row; clicking it opens the branch panel upward.
 
-> 默认 profile 一般是 `web`（即 `dsh web` 用的那个）；不确定可以运行 `dsh plugin --profile web list` 查看。
+> The default profile is usually `web` (the one `dsh web` uses). Run `dsh plugin --profile web list` if unsure.
 
-## 功能
+## Features
 
-| 操作 | 用法 | 底层命令 |
+| Operation | How | Underlying command |
 | --- | --- | --- |
-| 查看分支 | 徽标显示当前分支 + 未提交修改圆点 | `git rev-parse` / `git status --porcelain` |
-| 切换分支 | 点击分支列表中的行（当前分支带 ✓） | `git switch <branch>` |
-| 新建分支 | 面板顶部输入框，回车或点"新建" | `git switch -c <name>`（创建并切换） |
-| 重命名分支 | 行尾 ✎ → 内联输入，回车确认 / Esc 取消 | `git branch -m <old> <new>` |
-| 删除分支 | 行尾 🗑 → 二次确认 | `git branch -d <branch>`（安全删除） |
-| 刷新 | 面板底部"刷新"按钮 | 重新读取全部信息 |
+| View branch | Chip shows the current branch + an uncommitted-changes dot | `git rev-parse` / `git status --porcelain` |
+| Switch branch | Click a row (current branch is marked ✓) | `git switch <branch>` |
+| Create branch | Type in the top input, press Enter or click "New" | `git switch -c <name>` (creates and switches) |
+| Rename branch | Row-end ✎ → inline input, Enter to confirm / Esc to cancel | `git branch -m <old> <new>` |
+| Delete branch | Row-end 🗑 → confirm | `git branch -d <branch>` (safe delete) |
+| Refresh | "Refresh" button at the bottom of the panel | re-reads everything |
 
-安全说明：删除只用 `-d`（未合并分支会被 git 拒绝并显示原因），当前分支不可删除；任何操作失败都会把 git 的原始报错显示在面板里；所有 git 命令都不经过 shell，分支名有 `check-ref-format` 规则校验。
+Safety notes: deletion only uses `-d` (unmerged branches are refused by git with the reason shown), the current branch cannot be deleted, and every failure surfaces git's original error inside the panel. All git commands run without a shell, and branch names are validated against the `check-ref-format` rules before reaching git.
 
-## 使用说明
+## Usage
 
-- 徽标绑定**当前会话所属的工作区文件夹**；不属于任何工作区的散装会话不显示。
-- 点击徽标弹出分支面板：顶部输入框新建；列表点击行切换、行尾 ✎ 重命名、行尾 🗑 删除（需确认）；底部"刷新"。
-- 非 Git 文件夹显示"非 Git"占位；游离 HEAD 有提示。
+- The badge follows **the current session's workspace folder**; sessions that belong to no workspace show nothing.
+- Click the chip to open the panel (it opens upward from the composer):
+  - the top input creates a branch (and switches to it);
+  - rows switch on click; row-end ✎ renames; row-end 🗑 deletes (with confirmation);
+  - the bottom "Refresh" re-reads the branch list.
+- Non-git folders show a "Non-Git" placeholder; a detached HEAD is called out.
 
-## 更新
+## Update
 
-### 使用者：升级到新版
-
-```bash
-dsh plugin --profile <profile名> add dsh-git-branch-badge@<新版本号>
-# 或（GitHub 渠道）
-dsh plugin --profile <profile名> add github:ChenYichener/dsh-git-branch-badge
-```
-
-然后重启 `dsh web`。
-
-### 维护者：发布新版本
-
-1. 修改 `src/index.js`（Host 半边：git 命令与路由）或 `src/client/index.js`（Client 半边：徽标 UI）；
-2. 重新构建客户端包：`npm run build`（tsdown 生成 `lib/client.js`，已提交，用户从 git 安装无需构建）；
-3. 跑一遍冒烟测试（见 `scripts/smoke.mjs`，用临时仓库验证全部操作）；
-4. 提交推送（`git push`）；使用者重新执行上面的 add 命令 + 重启即升级。
-
-## 卸载
+### Users: upgrade to a new version
 
 ```bash
-dsh plugin --profile <profile名> remove dsh-git-branch-badge
+dsh plugin --profile <profile-name> add dsh-git-branch-badge@<new-version>
+# or (GitHub channel)
+dsh plugin --profile <profile-name> add github:ChenYichener/dsh-git-branch-badge
 ```
 
-然后重启 `dsh web`。
+Then restart `dsh web`.
 
-## 常见问题
+### Maintainers: publish a new version
 
-**Q：安装后徽标没出现？**
-A：确认重启了 `dsh web`；确认当前会话属于某个工作区（散装会话不显示）；查看是否报错（重启后的启动日志）。
+1. Edit `src/index.js` (host half: git commands + route) or `src/client/index.js` (client half: badge UI);
+2. Rebuild the client bundle: `npm run build` (tsdown emits `lib/client.js`, which is committed so git installs need no build);
+3. Run the smoke test (`node scripts/smoke.mjs`, exercises every operation on a scratch repo);
+4. `npm version patch && npm publish`, then `git push`; users re-run the add command above and restart.
 
-**Q：和动态插件版（`dynamic/` 目录）什么关系？**
-A：`dynamic/` 是早期用动态 Cordis 插件机制做的版本（重启即失效，需要反复重装），已被本 bundle 取代。bundle 版用正式插件机制（Host webServer 路由 + Client slots），装一次常驻。
+## Uninstall
 
-## 技术说明
+```bash
+dsh plugin --profile <profile-name> remove dsh-git-branch-badge
+```
 
-- **Host 半边**（`src/index.js`）：挂载 `/git-branch/api` JSON 路由（`ctx.webServer.register`），用 `node:child_process` 直接执行 git（不经 shell），带 DNS-rebinding / 跨站请求防护（仅接受 loopback Host + 同源浏览器标记）。
-- **Client 半边**（`src/client/index.js`）：注册进 `conversation.session.header.utilities` 槽位，通过 `fetch` 调宿主路由；样式为内联 `<style data-plugin>` 注入，全部使用 DSH 主题 token。
-- 构建：tsdown 生成 `lib/client.js`（`window.__ModuleLoader__.load` 模块表格式，react 走外部模块表），Node 半边即源文件，无需构建。
-- 仓库结构：
+Then restart `dsh web`.
+
+## FAQ
+
+**Q: The badge does not appear after install?**
+A: Make sure you restarted `dsh web`, and that the current session belongs to a workspace (ungrouped sessions show nothing). Check the startup log for errors.
+
+**Q: What about the old dynamic-plugin version (`dynamic/`)?**
+A: `dynamic/` is the early implementation built on the dynamic Cordis plugin mechanism (lost on every restart, required re-install). It has been replaced by this bundle, which uses the regular plugin mechanism (host webServer route + client slots) and persists.
+
+## How it works
+
+- **Host half** (`src/index.js`): mounts the `/git-branch/api` JSON route (`ctx.webServer.register`), runs git through `node:child_process` (never shell-interpreted), and is fenced against DNS-rebinding / cross-site requests (loopback Host header + same-origin browser markers only).
+- **Client half** (`src/client/index.js`): registers into the `conversation.input.left` slot, calls the host route via `fetch`; styles are injected as an inline `<style data-plugin>` tag using DSH theme tokens.
+- **Build**: tsdown emits `lib/client.js` in the module-loader format (`window.__ModuleLoader__.load`, react resolved from the module table); the Node half is plain source, no build.
 
 ```
 dsh-git-branch-badge/
-  README.md
+  README.md              # English (default)
+  README.zh.md           # 中文
   LICENSE
-  package.json            # dsh.bundle.patch + dsh.client 清单
-  cordis.patch.yml        # bundle 补丁：插入插件行
-  tsdown.config.ts        # client bundle 构建配置
-  src/index.js            # Host 半边（路由 + git）
-  src/client/index.js     # Client 半边（徽标 UI）
-  lib/client.js           # 构建产物（已提交）
-  scripts/smoke.mjs       # Host 半边集成冒烟测试
-  dynamic/                # 旧动态插件版（保留备查）
+  package.json           # dsh.bundle.patch + dsh.client manifest
+  cordis.patch.yml       # bundle patch: inserts the plugin row
+  tsdown.config.ts       # client bundle build config
+  src/index.js           # host half (route + git)
+  src/client/index.js    # client half (badge UI)
+  lib/client.js          # build output (committed)
+  scripts/smoke.mjs      # host-half integration smoke test
+  dynamic/               # legacy dynamic-plugin version (kept for reference)
 ```
 
 ## License
